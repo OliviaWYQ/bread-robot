@@ -48,3 +48,40 @@ def get_observation(self) -> dict[str, Any]:
 ### 参考
 - XLeRobot 校准代码：~/Desktop/XLeRobot/software/src/robots/xlerobot/xlerobot.py (calibrate 方法)
 - LeRobot so_follower：~/Desktop/lerobot-main/lerobot/robots/so_follower.py
+
+---
+
+## 2026-03-24 问题解决
+
+### 发现的问题
+1. **SOFollowerConfig 缺少 id 属性** - RobotConfig 基类需要 id，但 SOFollowerConfig 没有定义
+2. **port 没有默认值** - 需要手动传入串口路径
+
+### 修复方案
+修改 `lerobot-main/src/lerobot/robots/so_follower/config_so_follower.py`:
+
+```python
+@dataclass
+class SOFollowerConfig(RobotConfig):
+    """Base configuration class for SO Follower robots."""
+
+    # Robot id (required for RobotConfig)
+    id: str = "so101"
+
+    # Port to connect to the arm
+    port: str = "/dev/ttyACM0"
+```
+
+### 测试结果
+- ✅ 使用 Python 3.12 (miniforge3) 可以正常 import
+- ✅ 串口连接成功 (/dev/ttyACM0)
+- ✅ 成功读取关节位置: [2048, 2048, 2048, 2048, 2048, 2048]
+- ✅ 可以发送动作控制机械臂
+
+### 推送
+- 已推送到 lerobot-main: `commit c8dbcd4`
+- 修复 diff: 5 insertions, 2 deletions
+
+### 待后续
+- 暂无独立校准方法，通过 send_action 直接控制
+- 机械臂当前位置 2048 为中立位置
